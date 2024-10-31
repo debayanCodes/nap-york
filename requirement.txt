@@ -3,4 +3,4 @@ pandas
 matplotlib
 plotly
 numpy
-seaborn
+wordcloud
