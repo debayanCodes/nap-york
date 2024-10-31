@@ -35,11 +35,12 @@ st.markdown("""
 def load_data():
     """Load and preprocess the dataset with caching"""
     data = pd.read_csv("github_dataset.csv")
+    # Clean the data
     data['language'] = data['language'].fillna('Not Specified')
-    data['stars_count'] = data['stars_count'].fillna(0).astype(int)
-    data['forks_count'] = data['forks_count'].fillna(0).astype(int)
-    data['contributors'] = data['contributors'].fillna(0).astype(int)
-    data['issues_count'] = data['issues_count'].fillna(0).astype(int)
+    data['stars_count'] = pd.to_numeric(data['stars_count'], errors='coerce').fillna(0).astype(int)
+    data['forks_count'] = pd.to_numeric(data['forks_count'], errors='coerce').fillna(0).astype(int)
+    data['contributors'] = pd.to_numeric(data['contributors'], errors='coerce').fillna(0).astype(int)
+    data['issues_count'] = pd.to_numeric(data['issues_count'], errors='coerce').fillna(0).astype(int)
     if 'created_at' in data.columns:
         data['created_at'] = pd.to_datetime(data['created_at'], errors='coerce')
     return data
