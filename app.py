@@ -232,10 +232,12 @@ try:
     if 'topics' in filtered_data.columns:
         topics = ' '.join(filtered_data['topics'].dropna().astype(str))
         wordcloud = WordCloud(width=800, height=400, background_color='white').generate(topics)
-        plt.figure(figsize=(10, 5))
-        plt.imshow(wordcloud, interpolation='bilinear')
-        plt.axis('off')
-        st.pyplot(plt)
+        
+        # Display the word cloud with Matplotlib
+        fig, ax = plt.subplots(figsize=(10, 5))
+        ax.imshow(wordcloud, interpolation='bilinear')
+        ax.axis('off')
+        st.pyplot(fig)
 
     # Download Filtered Data
     st.subheader("Download Filtered Data")
