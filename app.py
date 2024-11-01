@@ -1,10 +1,7 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
 import plotly.express as px
 from datetime import datetime
-import numpy as np
-from wordcloud import WordCloud
 
 # Configure the page
 st.set_page_config(
@@ -17,7 +14,6 @@ st.set_page_config(
 st.markdown("""
     <style>
         .stPlotlyChart {
-            background-color: #ffffff;
             border-radius: 5px;
             padding: 1rem;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -41,8 +37,6 @@ def load_data():
     data['forks_count'] = pd.to_numeric(data['forks_count'], errors='coerce').fillna(0).astype(int)
     data['contributors'] = pd.to_numeric(data['contributors'], errors='coerce').fillna(0).astype(int)
     data['issues_count'] = pd.to_numeric(data['issues_count'], errors='coerce').fillna(0).astype(int)
-    if 'created_at' in data.columns:
-        data['created_at'] = pd.to_datetime(data['created_at'], errors='coerce')
     return data
 
 def format_number(num):
@@ -86,13 +80,6 @@ try:
             value=(int(data['stars_count'].min()), int(data['stars_count'].max()))
         )
 
-        # Date range filter if available
-        if 'created_at' in data.columns:
-            date_range = st.date_input(
-                "Date Range",
-                value=(data['created_at'].min(), data['created_at'].max())
-            )
-
     # Apply filters
     filtered_data = data.copy()
 
@@ -107,13 +94,6 @@ try:
             (filtered_data['stars_count'] <= star_range[1])
         ]
 
-    # Check if 'created_at' column exists and date_range is defined
-    if 'created_at' in data.columns and date_range:
-        filtered_data = filtered_data[
-            (filtered_data['created_at'] >= pd.to_datetime(date_range[0])) & 
-            (filtered_data['created_at'] <= pd.to_datetime(date_range[1]))
-        ]
-
     # Key Metrics
     col1, col2, col3, col4 = st.columns(4)
     with col1:
@@ -126,7 +106,7 @@ try:
         st.metric("Avg Contributors", format_number(int(filtered_data['contributors'].mean())))
 
     # Main content in tabs
-    tab1, tab2, tab3, tab4 = st.tabs(["📊 Overview", "🔍 Detailed Analysis", "📈 Trends", "🌐 Geographical Distribution"])
+    tab1, tab2 = st.tabs(["📊 Overview", "🔍 Detailed Analysis"])
 
     with tab1:
         col1, col2 = st.columns(2)
@@ -184,60 +164,6 @@ try:
             title="Issues vs Contributors Correlation"
         )
         st.plotly_chart(fig, use_container_width=True)
-
-    with tab3:
-        # Time series analysis if date column is available
-        if 'created_at' in filtered_data.columns:
-            st.subheader("Repository Creation Trends")
-            filtered_data['created_at'] = pd.to_datetime(filtered_data['created_at'])
-            monthly_trends = filtered_data.resample('M', on='created_at').size()
-
-            fig = px.line(
-                x=monthly_trends.index,
-                y=monthly_trends.values,
-                title="Monthly Repository Creation Trend"
-            )
-            st.plotly_chart(fig, use_container_width=True)
-
-        # Repository Age Distribution
-        st.subheader("Repository Age Distribution")
-        if 'created_at' in filtered_data.columns:
-            filtered_data['age'] = (datetime.now() - filtered_data['created_at']).dt.days
-            fig = px.histogram(
-                filtered_data,
-                x='age',
-                title="Repository Age Distribution",
-                nbins=30
-            )
-            st.plotly_chart(fig, use_container_width=True)
-
-    with tab4:
-        # Geographical Distribution
-        st.subheader("Geographical Distribution of Repositories")
-        if 'country' in filtered_data.columns:
-            country_dist = filtered_data['country'].value_counts().reset_index()
-            country_dist.columns = ['country', 'count']
-            fig = px.choropleth(
-                country_dist,
-                locations="country",
-                locationmode='country names',
-                color="count",
-                hover_name="country",
-                title="Geographical Distribution of Repositories"
-            )
-            st.plotly_chart(fig, use_container_width=True)
-
-    # Repository Topics Word Cloud
-    st.subheader("Repository Topics Word Cloud")
-    if 'topics' in filtered_data.columns:
-        topics = ' '.join(filtered_data['topics'].dropna().astype(str))
-        wordcloud = WordCloud(width=800, height=400, background_color='white').generate(topics)
-        
-        # Display the word cloud with Matplotlib
-        fig, ax = plt.subplots(figsize=(10, 5))
-        ax.imshow(wordcloud, interpolation='bilinear')
-        ax.axis('off')
-        st.pyplot(fig)
 
     # Download Filtered Data
     st.subheader("Download Filtered Data")
